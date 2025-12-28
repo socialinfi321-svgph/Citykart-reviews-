@@ -215,23 +215,23 @@
             </div>
 
             <div class="flex flex-col lg:flex-row items-center gap-12">
-                <div class="w-full lg:w-1/2">
-                    <div class="relative rounded-xl overflow-hidden border-4 border-gray-800 bg-black shadow-[0_0_50px_rgba(14,165,233,0.15)] aspect-video">
+                <div class="w-full lg:w-1/2 flex justify-center">
+                    <div class="relative rounded-[2.5rem] overflow-hidden border-[8px] border-gray-800 bg-black shadow-[0_0_50px_rgba(14,165,233,0.15)] aspect-[9/16] w-full max-w-[280px]">
+                        
                         <video 
+                            id="demoVideo"
                             autoplay 
                             loop 
                             muted 
                             playsinline 
+                            webkit-playsinline
                             src="demo_video.mp4" 
-                            class="w-full h-full object-cover opacity-80"
+                            class="w-full h-full object-cover"
                         >
                             <div class="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500">Video Loading...</div>
                         </video>
-                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div class="w-16 h-16 rounded-full bg-sky-500/20 backdrop-blur-sm flex items-center justify-center border border-sky-400/50">
-                                <div class="w-0 h-0 border-t-[10px] border-t-transparent border-l-[18px] border-l-white border-b-[10px] border-b-transparent ml-1"></div>
-                            </div>
-                        </div>
+                        
+                        <div class="absolute inset-0 pointer-events-none bg-gradient-to-tr from-white/10 to-transparent opacity-40 rounded-[2rem]"></div>
                     </div>
                 </div>
 
@@ -486,7 +486,7 @@
                     <h2 class="text-2xl font-bold font-heading tracking-wider text-white mb-2">
                         LOOP<span class="text-sky-400">in</span>
                     </h2>
-                    <p class="text-gray-500 text-sm">Ready to Automate Your Growth?</p>
+                    <p class="text-gray-500 text-sm">Empowering brands with authentic voice.</p>
                 </div>
 
                 <div class="flex flex-col items-center gap-4">
@@ -507,7 +507,7 @@
             </div>
             
             <div class="mt-12 pt-8 border-t border-gray-900 text-center text-gray-600 text-xs">
-                © 2025 LOOPin. All rights reserved.
+                © 2024 LOOPin Technologies. All rights reserved.
             </div>
         </div>
     </footer>
@@ -545,7 +545,7 @@
             });
         });
 
-        /* --- Showcase Mockup Logic (Interactive Phone) --- */
+        /* --- Showcase Mockup Logic --- */
         const MOCK_REVIEWS_MALE = [
             "Great collection of shirts, really liked the fabric quality. The staff was very helpful.",
             "Found exactly what I was looking for. The jeans fit perfectly and the price is unbeatable.",
@@ -677,6 +677,32 @@
                     els.copy.disabled = true;
                     resetCopyButton();
                 }, 4000);
+            }
+        });
+
+        /* --- FORCE VIDEO AUTOPLAY SCRIPT --- */
+        document.addEventListener('DOMContentLoaded', () => {
+            const video = document.getElementById('demoVideo');
+            
+            if(video) {
+                // Force play on load
+                video.muted = true;
+                video.play().catch(error => {
+                    console.log("Autoplay prevented by browser, waiting for interaction.");
+                });
+
+                // Force play when scrolled into view
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            video.play();
+                        } else {
+                            video.pause(); // Optional: pause when out of view
+                        }
+                    });
+                }, { threshold: 0.5 });
+                
+                observer.observe(video);
             }
         });
 
