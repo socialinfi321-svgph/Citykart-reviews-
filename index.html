@@ -1,238 +1,685 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    html, body {
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-    }
-
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background-image: url('https://raw.githubusercontent.com/socialinfi321-svgph/Citykart-reviews-/main/1762855084767.jpg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      text-align: center;
-      padding-top: 197px;
-    }
-
-    .subtitle {
-      font-size: 14px;
-      color: #333;
-      margin-bottom: 15px;
-      font-weight: 700;
-    }
-
-    .review-box {
-      width: 90%;
-      max-width: 650px;
-      background: rgba(255, 255, 255, 0.75);
-      border-radius: 25px;
-      padding: 20px 24px 50px 24px;
-      font-size: 15px;
-      font-family: 'Saira', Arial, Helvetica, sans-serif;
-      font-weight: 800;
-      color: #333;
-      line-height: 1.5;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-      text-align: left;
-      position: relative;
-      margin-bottom: 10px;
-    }
-
-    .copy-btn {
-      position: absolute;
-      bottom: 8px;
-      left: 24px;
-      background: #1976d2;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 14px;
-      transition: 0.3s;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-
-    .copy-btn:hover {
-      background: #0d47a1;
-    }
-
-    .google-btn {
-      display: inline-block;
-      margin-top: 35px;
-      border-radius: 8px;
-      text-decoration: none;
-      color: #fff;
-      font-weight: 600;
-      font-size: 15px;
-      padding: 11px 20px;
-      background: linear-gradient(90deg, #4285F4, #34A853, #FBBC05, #EA4335);
-      background-size: 500% 500%;
-      animation: colorShift 2s infinite alternate;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.25), 0 0 8px rgba(66, 133, 244, 0.3);
-    }
-
-    @keyframes colorShift {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 100% 50%; }
-    }
-
-    .star-section {
-      margin-top: 40px;
-      text-align: center;
-      color: #000;
-    }
-
-    .star-section .top-text {
-      display: block;
-      font-size: 10px;
-      margin-bottom: 2px;
-      color: #000;
-      font-weight: 500;
-    }
-
-    .stars {
-      font-size: 22px;
-      letter-spacing: 3px;
-      margin: 0;
-    }
-
-    .star-section .bottom-text {
-      display: block;
-      font-size: 10px;
-      margin-top: 2px;
-      color: #000;
-      font-weight: 500;
-    }
-
-    .thanks {
-      margin-top: 30px;
-      font-size: 22px;
-      font-family: 'Brush Script MT', cursive;
-      color: #111;
-      text-align: center;
-    }
-
-    .policy {
-      font-size: 12px;
-      color: #3b2121;
-      text-align: center;
-      margin-top: 3px;
-      line-height: 1.4;
-      max-width: 650px;
-    }
-  </style>
-</head>
-<body>
-  <div class="subtitle">To give review, copy the text below 👇</div>
-
-  <div class="review-box" id="reviewBox">
-    <p id="reviewText">Loading review...</p>
-    <button class="copy-btn" id="copyBtn">Copy Text</button>
-  </div>
-
-  <a href="https://g.page/r/CUtUSokIOZZYEBE/review" class="google-btn">
-    Google Reviews
-  </a>
-
-  <div class="star-section">
-    <span class="top-text">Only give</span>
-    <div class="stars">⭐⭐⭐⭐⭐</div>
-    <span class="bottom-text">May your day not be good but great</span>
-  </div>
-
-  <div class="thanks">Thanks for supporting</div>
-
-  <div class="policy">
-    <p>All reviews are voluntary, and for feedback purposes only.</p>
-    <p>By using this page, you agree that reviews reflect personal experience only.</p>
-  </div>
-
-  <script>
-    // ✅ Updated API URL
-    const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbyEMd3NF1XNxVvQyyNcySOk4FgOdqVRHTPTQaZZKA8DgQRtKCYpsU6vtNoGswdVCTVz/exec';
-
-    const reviewText = document.getElementById('reviewText');
-    const copyBtn = document.getElementById('copyBtn');
-
-    async function fetchReview() {
-      try {
-        const response = await fetch(SHEET_API_URL + '?action=get');
-        if (!response.ok) throw new Error('Failed to fetch review');
-
-        const textData = await response.text();
-        console.log('Raw response:', textData);
-
-        let data;
-        try {
-          data = JSON.parse(textData);
-        } catch {
-          reviewText.innerText = textData.trim() || "No review text found.";
-          setupCopyButton(textData.trim());
-          return;
-        }
-
-        if (data.error) {
-          reviewText.innerText = data.error;
-          copyBtn.style.display = "none";
-        } else if (data.review) {
-          reviewText.innerText = data.review;
-          setupCopyButton(data.review);
-        } else {
-          reviewText.innerText = "No reviews found.";
-          copyBtn.style.display = "none";
-        }
-
-      } catch (err) {
-        console.error('Error:', err);
-        reviewText.innerText = "Error fetching review. Please try again later.";
-        copyBtn.style.display = "none";
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LOOPin | The Future of Automated Reviews</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Montserrat:wght@400;600;800&family=Poppins:wght@300;400;600;700&family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
+    
+    <style>
+      /* --- Custom Animations --- */
+      @keyframes googleFlow {
+        0% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
       }
-    }
+      .animate-google-flow {
+        background-size: 300% 100%;
+        animation: googleFlow 4s linear infinite;
+      }
+      
+      @keyframes popIn {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+      .animate-pop-in {
+        animation: popIn 0.4s ease-out forwards;
+      }
+      
+      @keyframes slideDown {
+        from { transform: translateY(-100%); }
+        to { transform: translateY(0); }
+      }
+      .animate-slide-down {
+        animation: slideDown 0.5s ease-out forwards;
+      }
+      
+      @keyframes spin-slow {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+      .animate-spin-slow {
+        animation: spin-slow 10s linear infinite;
+      }
+      
+      @keyframes spin-reverse-slower {
+        from { transform: translate(-50%, -50%) rotate(360deg); }
+        to { transform: translate(-50%, -50%) rotate(0deg); }
+      }
+      .animate-spin-reverse-slower {
+        animation: spin-reverse-slower 20s linear infinite;
+      }
 
-    function setupCopyButton(textToCopy) {
-      const newBtn = copyBtn.cloneNode(true);
-      copyBtn.parentNode.replaceChild(newBtn, copyBtn);
+      /* Scrollbar hiding for Phone Mockup */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
 
-      newBtn.addEventListener("click", async () => {
-        try {
-          await navigator.clipboard.writeText(textToCopy);
-          newBtn.innerText = "Copied ✓";
-          setTimeout(() => (newBtn.innerText = "Copy Text"), 2000);
-        } catch {
-          const textarea = document.createElement("textarea");
-          textarea.value = textToCopy;
-          textarea.style.position = "fixed";
-          textarea.style.left = "-9999px";
-          document.body.appendChild(textarea);
-          textarea.select();
-          document.execCommand("copy");
-          document.body.removeChild(textarea);
-          newBtn.innerText = "Copied ✓";
-          setTimeout(() => (newBtn.innerText = "Copy Text"), 2000);
+      /* Base styles */
+      body {
+        font-family: 'Poppins', sans-serif;
+      }
+      h1, h2, h3, .font-heading {
+        font-family: 'Montserrat', sans-serif;
+      }
+    </style>
+</head>
+<body class="bg-[#0a0f1c] text-white selection:bg-sky-500/30 selection:text-sky-100">
+
+    <header id="main-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-6">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold font-heading tracking-wider text-white">
+                LOOP<span class="text-sky-400">in</span>
+            </a>
+
+            <nav class="hidden md:flex gap-8 items-center">
+                <a href="#how-it-works" class="text-gray-300 hover:text-sky-400 text-sm font-medium transition-colors">How it Works</a>
+                <a href="#showcase" class="text-gray-300 hover:text-sky-400 text-sm font-medium transition-colors">Live Demo</a>
+                <a href="#features" class="text-gray-300 hover:text-sky-400 text-sm font-medium transition-colors">Features</a>
+                <a href="#roadmap" class="text-gray-300 hover:text-sky-400 text-sm font-medium transition-colors">Future</a>
+                <a href="#contact" class="px-5 py-2 rounded-full bg-gradient-to-r from-sky-600 to-blue-600 text-white text-sm font-semibold hover:shadow-[0_0_20px_rgba(14,165,233,0.5)] transition-all duration-300">
+                    Get Started
+                </a>
+            </nav>
+
+            <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none">
+                <i data-lucide="menu"></i>
+            </button>
+        </div>
+
+        <div id="mobile-menu" class="hidden absolute top-full left-0 w-full bg-[#0a0f1c] border-b border-sky-900/30 p-6 flex-col gap-4 md:hidden shadow-2xl">
+            <a href="#how-it-works" class="text-gray-300 hover:text-sky-400 text-lg font-medium mobile-link">How it Works</a>
+            <a href="#showcase" class="text-gray-300 hover:text-sky-400 text-lg font-medium mobile-link">Live Demo</a>
+            <a href="#features" class="text-gray-300 hover:text-sky-400 text-lg font-medium mobile-link">Features</a>
+            <a href="#roadmap" class="text-gray-300 hover:text-sky-400 text-lg font-medium mobile-link">Future</a>
+            <a href="#contact" class="mt-4 w-full text-center px-5 py-3 rounded-lg bg-sky-600 text-white font-semibold mobile-link">Get Started</a>
+        </div>
+    </header>
+
+    <section class="relative min-h-screen flex items-center pt-20 overflow-hidden bg-[#0a0f1c]">
+        <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-sky-900/10 to-transparent pointer-events-none"></div>
+        <div class="absolute -top-20 -right-20 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl"></div>
+        
+        <div class="container mx-auto px-6 relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            
+            <div class="text-center md:text-left space-y-8 animate-fade-in-up">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-900/30 border border-sky-700/50 text-sky-400 text-xs font-bold uppercase tracking-wider">
+                    <i data-lucide="zap" class="w-3 h-3 fill-current"></i>
+                    <span>Automated Growth</span>
+                </div>
+                
+                <h1 class="text-4xl md:text-6xl font-extrabold leading-tight">
+                    In a Fast-Forward World, <br/>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-white">
+                        Genuine Reviews
+                    </span> <br/>
+                    Seem Impossible. Until Now.
+                </h1>
+                
+                <p class="text-gray-400 text-lg md:text-xl max-w-xl mx-auto md:mx-0 leading-relaxed">
+                    Bridging the gap between brands and authentic customer feedback in under 60 seconds.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                    <a href="#contact" class="px-8 py-4 rounded-full bg-white text-[#0a0f1c] font-bold hover:bg-gray-100 transition-transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                        Boost Your Ratings <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                    <a href="#how-it-works" class="px-8 py-4 rounded-full border border-sky-600/50 text-white font-semibold hover:bg-sky-900/20 transition-colors flex items-center justify-center">
+                        Watch Demo
+                    </a>
+                </div>
+            </div>
+
+            <div class="relative h-[400px] md:h-[600px] flex items-center justify-center">
+                <div class="relative w-full h-full max-w-md">
+                    <div class="absolute top-1/2 left-1/2 w-64 h-64 border border-sky-500/20 rounded-full animate-spin-slow"></div>
+                    <div class="absolute top-1/2 left-1/2 w-80 h-80 border border-dashed border-sky-400/30 rounded-full animate-spin-reverse-slower"></div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-br from-sky-600/20 to-blue-900/20 rounded-full blur-xl animate-pulse"></div>
+                    
+                    <div class="absolute top-1/4 left-0 p-4 bg-[#111827] border border-sky-800/50 rounded-xl shadow-2xl transform -rotate-6 animate-bounce duration-[3000ms]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 to-orange-500 flex items-center justify-center text-[10px] font-bold text-white"><i data-lucide="check" class="w-4 h-4"></i></div>
+                            <div class="flex text-yellow-400 text-xs font-bold">Verified</div>
+                        </div>
+                    </div>
+
+                    <div class="absolute bottom-1/4 right-0 p-4 bg-[#111827] border border-sky-800/50 rounded-xl shadow-2xl transform rotate-3 animate-bounce duration-[4000ms]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-400 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white">★</div>
+                            <div class="flex text-white text-xs font-bold">5.0 Rating</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-24 bg-[#0d1221]">
+        <div class="container mx-auto px-6">
+            
+            <div class="text-center mb-16 max-w-3xl mx-auto">
+                <h2 class="text-3xl md:text-5xl font-bold font-heading mb-6">
+                    The Review <span class="text-sky-400">Dilemma</span>
+                </h2>
+                <p class="text-gray-400 text-lg">
+                    Your customers love your service, but they hate typing. Without fresh reviews, your Google ranking drops, and growth stalls.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="p-8 rounded-2xl bg-[#151b2e] border border-gray-800 hover:border-sky-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="w-14 h-14 rounded-full bg-sky-900/20 text-sky-400 flex items-center justify-center mb-6">
+                        <i data-lucide="hourglass" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Time Constrained</h3>
+                    <p class="text-gray-400">Customers don't have 5 minutes to write a paragraph.</p>
+                </div>
+
+                <div class="p-8 rounded-2xl bg-[#151b2e] border border-gray-800 hover:border-sky-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="w-14 h-14 rounded-full bg-sky-900/20 text-sky-400 flex items-center justify-center mb-6">
+                        <i data-lucide="brain-circuit" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Writer's Block</h3>
+                    <p class="text-gray-400">"What should I write?" leads to abandonment.</p>
+                </div>
+
+                <div class="p-8 rounded-2xl bg-[#151b2e] border border-gray-800 hover:border-sky-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="w-14 h-14 rounded-full bg-sky-900/20 text-sky-400 flex items-center justify-center mb-6">
+                        <i data-lucide="trending-down" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Lost Visibility</h3>
+                    <p class="text-gray-400">Fewer reviews mean lower SEO rankings.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="py-24 bg-[#0a0f1c]">
+        <div class="container mx-auto px-6">
+            
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold font-heading mb-4">
+                    The <span class="text-sky-400">LOOPin</span> Solution
+                </h2>
+                <p class="text-gray-400">Analyze our seamless user flow.</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row items-center gap-12">
+                <div class="w-full lg:w-1/2">
+                    <div class="relative rounded-xl overflow-hidden border-4 border-gray-800 bg-black shadow-[0_0_50px_rgba(14,165,233,0.15)] aspect-video">
+                        <video 
+                            autoplay 
+                            loop 
+                            muted 
+                            playsinline 
+                            src="demo_video.mp4" 
+                            class="w-full h-full object-cover opacity-80"
+                        >
+                            <div class="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500">Video Loading...</div>
+                        </video>
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div class="w-16 h-16 rounded-full bg-sky-500/20 backdrop-blur-sm flex items-center justify-center border border-sky-400/50">
+                                <div class="w-0 h-0 border-t-[10px] border-t-transparent border-l-[18px] border-l-white border-b-[10px] border-b-transparent ml-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full lg:w-1/2 space-y-6">
+                    <div class="flex gap-4 items-start group">
+                        <div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-sky-400 to-transparent font-['Rubik_Wet_Paint'] opacity-50 group-hover:opacity-100 transition-opacity">01</div>
+                        <div class="pt-2">
+                            <h4 class="text-xl font-bold text-white mb-1 group-hover:text-sky-400 transition-colors">Scan QR</h4>
+                            <p class="text-sm text-gray-400">Customer scans the code at the counter.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start group">
+                        <div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-sky-400 to-transparent font-['Rubik_Wet_Paint'] opacity-50 group-hover:opacity-100 transition-opacity">02</div>
+                        <div class="pt-2">
+                            <h4 class="text-xl font-bold text-white mb-1 group-hover:text-sky-400 transition-colors">Select Gender</h4>
+                            <p class="text-sm text-gray-400">Ensures the review language fits the user.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start group">
+                        <div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-sky-400 to-transparent font-['Rubik_Wet_Paint'] opacity-50 group-hover:opacity-100 transition-opacity">03</div>
+                        <div class="pt-2">
+                            <h4 class="text-xl font-bold text-white mb-1 group-hover:text-sky-400 transition-colors">One-Tap Copy</h4>
+                            <p class="text-sm text-gray-400">User selects a pre-written review and copies it.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start group">
+                        <div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-sky-400 to-transparent font-['Rubik_Wet_Paint'] opacity-50 group-hover:opacity-100 transition-opacity">04</div>
+                        <div class="pt-2">
+                            <h4 class="text-xl font-bold text-white mb-1 group-hover:text-sky-400 transition-colors">Paste & Post</h4>
+                            <p class="text-sm text-gray-400">Auto-redirects to Google. Paste and done.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="showcase" class="py-24 bg-[#0d1221] overflow-hidden">
+        <div class="container mx-auto px-6 flex flex-col items-center">
+            
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-5xl font-bold font-heading mb-4">
+                    Our Product in <span class="text-sky-400">Action</span>
+                </h2>
+                <p class="text-gray-400 max-w-xl mx-auto">
+                    Customized for CityKart. Every brand gets a unique, branded interface. This isn't just a form; it's an experience.
+                </p>
+            </div>
+
+            <div class="relative w-[320px] h-[650px] border-[14px] border-gray-900 rounded-[3rem] bg-gray-100 shadow-[0_0_60px_-15px_rgba(14,165,233,0.3)] overflow-hidden flex flex-col">
+                
+                <div class="h-[60px] bg-gradient-to-br from-[#b71c1c] to-[#ef5350] flex items-center justify-center shadow-md z-10 shrink-0">
+                    <span class="text-white text-xl font-extrabold tracking-widest uppercase">CityKart</span>
+                </div>
+
+                <div class="relative flex-1 bg-[#f4f6f8] flex flex-col items-center pt-6 px-4 pb-4 overflow-y-auto no-scrollbar font-['Poppins']">
+                    
+                    <div class="absolute top-4 left-4 flex flex-col gap-1.5 w-6">
+                        <div class="h-0.5 bg-gray-800 w-full"></div>
+                        <div class="h-0.5 bg-gray-800 w-full"></div>
+                        <div class="h-0.5 bg-gray-800 w-full"></div>
+                    </div>
+
+                    <div class="w-32 h-16 bg-white rounded-lg mb-4 flex items-center justify-center border border-gray-200 shadow-sm mt-4">
+                        <span class="text-red-600 font-bold text-lg italic">CityKart</span>
+                    </div>
+
+                    <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-6">Contribute Google Review</h3>
+
+                    <div class="w-full relative mb-12">
+                        <div class="bg-white rounded-2xl p-6 min-h-[140px] shadow-sm flex items-center relative transition-all duration-300">
+                            <p id="demo-review-text" class="text-sm font-semibold text-gray-800 leading-relaxed text-left w-full">
+                                <span class="text-xs text-gray-400 italic block text-center mt-4">Waiting for selection...</span>
+                            </p>
+                            <span id="demo-counter" class="absolute top-2 right-4 text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md hidden">1/3</span>
+                        </div>
+
+                        <button id="demo-prev-btn" class="absolute left-[-10px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gray-200/50 flex items-center justify-center text-gray-600 hover:bg-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" disabled>
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        </button>
+                        <button id="demo-next-btn" class="absolute right-[-10px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gray-200/50 flex items-center justify-center text-gray-600 hover:bg-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" disabled>
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+
+                        <button id="demo-copy-btn" class="absolute -bottom-4 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full text-xs font-bold text-white shadow-md transition-all active:scale-95 flex items-center gap-1 bg-[#1976d2] disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i data-lucide="copy" class="w-3 h-3"></i> <span>Copy Text</span>
+                        </button>
+                    </div>
+
+                    <button id="demo-google-btn" class="w-full max-w-[200px] py-3 rounded-full text-white font-bold text-sm shadow-lg animate-google-flow transform transition-transform hover:-translate-y-1 relative z-0" style="background: linear-gradient(90deg, #4285F4, #34A853, #FBBC05, #EA4335, #4285F4, #34A853); background-size: 300% 100%;">
+                        Google Reviews
+                    </button>
+
+                    <div class="mt-8 text-center">
+                        <p class="text-[10px] font-medium text-gray-500">Only give</p>
+                        <div class="flex justify-center text-yellow-400 text-xl my-1">★★★★★</div>
+                        <p class="text-[10px] font-medium text-gray-500">Have a great day</p>
+                    </div>
+
+                    <div class="mt-6 font-['Rubik_Wet_Paint'] text-xl text-gray-800">
+                        Thanks for supporting
+                    </div>
+
+                    <button class="absolute bottom-4 left-4 w-10 h-10 bg-[#43a047] rounded-full text-white text-[9px] font-bold shadow-lg flex items-center justify-center z-10 hover:scale-110 transition-transform">
+                        TYPE
+                    </button>
+                    <div class="absolute bottom-4 right-4 w-10 h-10 bg-gradient-to-br from-[#0a1628] to-[#1e3a5f] rounded-full border-2 border-[#00d4ff] flex items-center justify-center text-xl shadow-[0_4px_15px_rgba(0,212,255,0.3)] z-10 cursor-help">
+                        🤖
+                    </div>
+                </div>
+
+                <div id="demo-gender-popup" class="absolute inset-0 bg-white/60 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <div class="bg-white/95 p-6 rounded-2xl shadow-xl w-[80%] max-w-[250px] border border-white text-center animate-pop-in">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">Welcome</h3>
+                        <p class="text-xs text-gray-500 mb-5">Select gender to continue</p>
+                        <div class="flex flex-col gap-3">
+                            <button onclick="selectGender('male')" class="flex items-center justify-center gap-2 p-3 rounded-xl border border-blue-100 bg-blue-50 text-blue-600 text-sm font-semibold hover:bg-blue-100 transition-colors">
+                                <span>👨</span> Male
+                            </button>
+                            <button onclick="selectGender('female')" class="flex items-center justify-center gap-2 p-3 rounded-xl border border-pink-100 bg-pink-50 text-pink-600 text-sm font-semibold hover:bg-pink-100 transition-colors">
+                                <span>👩</span> Female
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="demo-copy-alert" class="hidden absolute inset-0 bg-black/50 z-[60] flex items-center justify-center">
+                    <div class="bg-white rounded-xl p-5 shadow-2xl animate-pop-in">
+                        <p class="text-sm font-bold text-gray-800">Please click 'Copy Text' first!</p>
+                    </div>
+                </div>
+
+                <div id="demo-animation-overlay" class="hidden absolute inset-0 bg-gradient-to-br from-[#0f2027] via-[#203a43] to-[#2c5364] z-[70] flex-col items-center justify-center text-white animate-slide-down">
+                      <h2 class="text-xl font-bold text-center mb-8 px-4 drop-shadow-md">Give 5 Stars and Paste the Text</h2>
+                      <div class="flex gap-2 text-4xl">
+                        <span class="text-yellow-400 animate-bounce" style="animation-delay: 0s">★</span>
+                        <span class="text-yellow-400 animate-bounce" style="animation-delay: 0.1s">★</span>
+                        <span class="text-yellow-400 animate-bounce" style="animation-delay: 0.2s">★</span>
+                        <span class="text-yellow-400 animate-bounce" style="animation-delay: 0.3s">★</span>
+                        <span class="text-yellow-400 animate-bounce" style="animation-delay: 0.4s">★</span>
+                      </div>
+                </div>
+                </div>
+            
+            <p class="mt-8 text-sm text-gray-500 font-mono">
+                * This is a fully functional mockup. Try clicking the buttons.
+            </p>
+        </div>
+    </section>
+
+    <section id="features" class="py-24 bg-[#0a0f1c] relative">
+        <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-sky-900/50 to-transparent"></div>
+        
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16 max-w-3xl mx-auto">
+                <h2 class="text-3xl md:text-5xl font-bold font-heading mb-6">
+                    Smart <span class="text-sky-400">Backend</span>
+                </h2>
+                <p class="text-gray-400">
+                    It looks like a simple webpage, but under the hood, LOOPin manages data flow to ensure review longevity and authenticity.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="p-8 rounded-2xl bg-[#111827] border border-sky-900/20 hover:border-sky-500/50 transition-all duration-300 hover:shadow-[0_10px_40px_-10px_rgba(14,165,233,0.2)] group">
+                    <div class="w-14 h-14 rounded-xl bg-sky-900/20 flex items-center justify-center text-sky-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i data-lucide="venus-mars" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Gender-Specific Fetching</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Serves reviews that sound natural based on the user's gender.</p>
+                </div>
+                <div class="p-8 rounded-2xl bg-[#111827] border border-sky-900/20 hover:border-sky-500/50 transition-all duration-300 hover:shadow-[0_10px_40px_-10px_rgba(14,165,233,0.2)] group">
+                    <div class="w-14 h-14 rounded-xl bg-sky-900/20 flex items-center justify-center text-sky-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i data-lucide="database" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Smart Database</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Once a review is used, it's removed from the pool to prevent duplicates.</p>
+                </div>
+                <div class="p-8 rounded-2xl bg-[#111827] border border-sky-900/20 hover:border-sky-500/50 transition-all duration-300 hover:shadow-[0_10px_40px_-10px_rgba(14,165,233,0.2)] group">
+                    <div class="w-14 h-14 rounded-xl bg-sky-900/20 flex items-center justify-center text-sky-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i data-lucide="sliders-horizontal" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Balanced Feedback</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Mixes positive and moderate reviews for authentic growth.</p>
+                </div>
+                <div class="p-8 rounded-2xl bg-[#111827] border border-sky-900/20 hover:border-sky-500/50 transition-all duration-300 hover:shadow-[0_10px_40px_-10px_rgba(14,165,233,0.2)] group">
+                    <div class="w-14 h-14 rounded-xl bg-sky-900/20 flex items-center justify-center text-sky-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i data-lucide="keyboard" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Manual Override</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Includes a 'Type Manually' button for users who prefer writing their own.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="roadmap" class="py-24 bg-[#0a0f1c] border-t border-sky-900/30">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl md:text-5xl font-bold font-heading text-center mb-16">
+                The Future of <span class="text-sky-400">LOOPin</span>
+            </h2>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="p-8 rounded-3xl bg-gradient-to-br from-[#111827] to-[#0a0f1c] border border-sky-900/30 relative overflow-hidden group">
+                     <div class="relative z-10">
+                        <div class="w-12 h-12 bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-400 mb-6">
+                            <span class="font-bold text-lg">01</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Phase 1: Deployment</h3>
+                        <p class="text-gray-400 mb-4 text-sm">QR Integration & Smart Fetching (Live Now)</p>
+                        <div class="h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                            <div class="h-full w-full bg-blue-500 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-8 rounded-3xl bg-gradient-to-br from-[#111827] to-[#0a0f1c] border border-sky-900/30 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-all duration-500"></div>
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-purple-900/30 rounded-xl flex items-center justify-center text-purple-400 mb-6">
+                            <span class="font-bold text-lg">02</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Phase 2: AI Integration</h3>
+                        <p class="text-gray-400 mb-4 text-sm">Real-time review generation based on "What did you buy?" keywords.</p>
+                        <div class="h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                            <div class="h-full w-1/4 bg-purple-500 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-8 rounded-3xl bg-gradient-to-br from-[#111827] to-[#0a0f1c] border border-sky-900/30 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-green-500/10 rounded-full blur-3xl group-hover:bg-green-500/20 transition-all duration-500"></div>
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-green-900/30 rounded-xl flex items-center justify-center text-green-400 mb-6">
+                            <span class="font-bold text-lg">03</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Phase 3: Feedback Loop</h3>
+                        <p class="text-gray-400 mb-4 text-sm">Direct messaging system for brands to resolve issues instantly.</p>
+                        <div class="h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                            <div class="h-full w-0 bg-green-500 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact" class="bg-[#05080f] py-12 border-t border-gray-800">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="text-center md:text-left">
+                    <h2 class="text-2xl font-bold font-heading tracking-wider text-white mb-2">
+                        LOOP<span class="text-sky-400">in</span>
+                    </h2>
+                    <p class="text-gray-500 text-sm">Ready to Automate Your Growth?</p>
+                </div>
+
+                <div class="flex flex-col items-center gap-4">
+                    <div class="flex items-center gap-2 text-gray-300 hover:text-sky-400 transition-colors">
+                        <i data-lucide="mail" class="w-4 h-4"></i>
+                        <a href="mailto:socialinfi321@gmail.com" class="font-medium">socialinfi321@gmail.com</a>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-sky-600 hover:text-white transition-all">
+                            <i data-lucide="github" class="w-4 h-4"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-sky-600 hover:text-white transition-all">
+                            <i data-lucide="twitter" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-12 pt-8 border-t border-gray-900 text-center text-gray-600 text-xs">
+                © 2025 LOOPin. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        /* --- Header & Mobile Menu Logic --- */
+        const header = document.getElementById('main-header');
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                header.classList.add('bg-[#0a0f1c]/95', 'backdrop-blur-md', 'shadow-lg', 'border-b', 'border-sky-900/20');
+                header.classList.remove('py-6');
+                header.classList.add('py-4');
+            } else {
+                header.classList.remove('bg-[#0a0f1c]/95', 'backdrop-blur-md', 'shadow-lg', 'border-b', 'border-sky-900/20', 'py-4');
+                header.classList.add('py-6');
+            }
+        });
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            mobileMenu.classList.toggle('flex');
+        });
+
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                mobileMenu.classList.remove('flex');
+            });
+        });
+
+        /* --- Showcase Mockup Logic (Interactive Phone) --- */
+        const MOCK_REVIEWS_MALE = [
+            "Great collection of shirts, really liked the fabric quality. The staff was very helpful.",
+            "Found exactly what I was looking for. The jeans fit perfectly and the price is unbeatable.",
+            "Quick billing process and friendly atmosphere. Will definitely visit again for formal wear."
+        ];
+        const MOCK_REVIEWS_FEMALE = [
+            "Absolutely love the kurti collection! The designs are so trendy and the material is soft.",
+            "The staff helped me match accessories perfectly. Great shopping experience today.",
+            "Bought a few dresses for summer. Amazing quality for the price. Highly recommend!"
+        ];
+
+        let currentState = {
+            gender: null,
+            reviews: [],
+            index: 0,
+            copied: false
+        };
+
+        const els = {
+            popup: document.getElementById('demo-gender-popup'),
+            text: document.getElementById('demo-review-text'),
+            counter: document.getElementById('demo-counter'),
+            prev: document.getElementById('demo-prev-btn'),
+            next: document.getElementById('demo-next-btn'),
+            copy: document.getElementById('demo-copy-btn'),
+            google: document.getElementById('demo-google-btn'),
+            alert: document.getElementById('demo-copy-alert'),
+            animation: document.getElementById('demo-animation-overlay')
+        };
+
+        function selectGender(gender) {
+            // Hide Popup
+            els.popup.style.display = 'none';
+            
+            // Set Loading state
+            els.text.innerHTML = '<span class="text-xs text-gray-400 italic block text-center mt-4">Loading reviews...</span>';
+            
+            // Simulate Network Delay
+            setTimeout(() => {
+                currentState.gender = gender;
+                currentState.reviews = gender === 'male' ? MOCK_REVIEWS_MALE : MOCK_REVIEWS_FEMALE;
+                currentState.index = 0;
+                currentState.copied = false;
+                
+                updateUI();
+                enableControls();
+            }, 500);
         }
-      });
-    }
 
-    fetchReview();
-  </script>
+        function updateUI() {
+            // Update Text
+            els.text.textContent = currentState.reviews[currentState.index];
+            els.text.classList.remove('text-center');
+            
+            // Update Counter
+            els.counter.textContent = `${currentState.index + 1}/${currentState.reviews.length}`;
+            els.counter.classList.remove('hidden');
+
+            // Reset Copy Button
+            resetCopyButton();
+
+            // Update Arrows
+            els.prev.disabled = currentState.index === 0;
+            els.next.disabled = currentState.index === currentState.reviews.length - 1;
+        }
+
+        function enableControls() {
+            els.copy.disabled = false;
+        }
+
+        function resetCopyButton() {
+            currentState.copied = false;
+            els.copy.style.backgroundColor = '#1976d2';
+            els.copy.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i> <span>Copy Text</span>';
+            lucide.createIcons();
+        }
+
+        // Navigation
+        els.prev.addEventListener('click', () => {
+            if (currentState.index > 0) {
+                currentState.index--;
+                updateUI();
+            }
+        });
+
+        els.next.addEventListener('click', () => {
+            if (currentState.index < currentState.reviews.length - 1) {
+                currentState.index++;
+                updateUI();
+            }
+        });
+
+        // Copy
+        els.copy.addEventListener('click', () => {
+            const text = currentState.reviews[currentState.index];
+            navigator.clipboard.writeText(text).then(() => {
+                currentState.copied = true;
+                els.copy.style.backgroundColor = '#43a047';
+                els.copy.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> <span>Copied</span>';
+                lucide.createIcons();
+            });
+        });
+
+        // Google Button
+        els.google.addEventListener('click', () => {
+            if (!currentState.copied) {
+                els.alert.classList.remove('hidden');
+                els.alert.classList.add('flex');
+                setTimeout(() => {
+                    els.alert.classList.add('hidden');
+                    els.alert.classList.remove('flex');
+                }, 2000);
+            } else {
+                els.animation.classList.remove('hidden');
+                els.animation.classList.add('flex');
+                
+                // Reset Simulation after 4 seconds
+                setTimeout(() => {
+                    els.animation.classList.add('hidden');
+                    els.animation.classList.remove('flex');
+                    
+                    // Reset to initial state
+                    currentState = { gender: null, reviews: [], index: 0, copied: false };
+                    els.popup.style.display = 'flex';
+                    els.text.innerHTML = '<span class="text-xs text-gray-400 italic block text-center mt-4">Waiting for selection...</span>';
+                    els.counter.classList.add('hidden');
+                    els.prev.disabled = true;
+                    els.next.disabled = true;
+                    els.copy.disabled = true;
+                    resetCopyButton();
+                }, 4000);
+            }
+        });
+
+    </script>
 </body>
 </html>
-
-
-
